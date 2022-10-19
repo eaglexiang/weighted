@@ -1,5 +1,12 @@
 package weighted
 
+import (
+	jsoniter "github.com/json-iterator/go"
+	"github.com/pkg/errors"
+)
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
 // smoothWeighted is a wrapped weighted item.
 type smoothWeighted struct {
 	Item            interface{}
@@ -20,7 +27,6 @@ among peers.
 
 In case of { 5, 1, 1 } weights this gives the following sequence of
 current_weight's: (a, a, b, a, c, a, a)
-
 */
 type SW struct {
 	items []*smoothWeighted
@@ -33,6 +39,35 @@ type SW struct {
 // 		w.EffectiveWeight = 0
 // 	}
 // }
+
+type jsonTMP struct {
+	Items []*smoothWeighted
+	N     int
+}
+
+func (w *SW) MarshalJSON() (buf []byte, err error) {
+	tmp := jsonTMP{
+		Items: w.items,
+		N:     w.n,
+	}
+	buf, err = json.Marshal(tmp)
+	err = errors.WithStack(err)
+	return
+}
+
+func (w *SW) UnmarshalJSON(buf []byte) (err error) {
+	tmp := jsonTMP{}
+	err = json.Unmarshal(buf, &tmp)
+	if err != nil {
+		err = errors.WithStack(err)
+		return
+	}
+
+	w.items = tmp.Items
+	w.n = tmp.N
+
+	return
+}
 
 // Add a weighted server.
 func (w *SW) Add(item interface{}, weight int) {
@@ -47,7 +82,7 @@ func (w *SW) RemoveAll() {
 	w.n = 0
 }
 
-//Reset resets all current weights.
+// Reset resets all current weights.
 func (w *SW) Reset() {
 	for _, s := range w.items {
 		s.EffectiveWeight = s.Weight
@@ -85,7 +120,7 @@ func (w *SW) nextWeighted() *smoothWeighted {
 	return nextSmoothWeighted(w.items)
 }
 
-//https://github.com/phusion/nginx/commit/27e94984486058d73157038f7950a0a36ecc6e35
+// https://github.com/phusion/nginx/commit/27e94984486058d73157038f7950a0a36ecc6e35
 func nextSmoothWeighted(items []*smoothWeighted) (best *smoothWeighted) {
 	total := 0
 
