@@ -71,12 +71,17 @@ func (w *SW) UnmarshalJSON(buf []byte) (err error) {
 
 // SetWeight set weight of specific id
 func (w *SW) SetWeight(id string, weight int) {
-	for _, item := range w.items {
+	for i, item := range w.items {
 		if item.Item == id {
-			item.Weight = weight
+			if item.Weight < 1 {
+				w.remove(i)
+			} else {
+				item.Weight = weight
+			}
 			return
 		}
 	}
+	w.Add(id, weight)
 }
 
 // Add a weighted server.
@@ -84,6 +89,19 @@ func (w *SW) Add(item interface{}, weight int) {
 	weighted := &smoothWeighted{Item: item, Weight: weight, EffectiveWeight: weight}
 	w.items = append(w.items, weighted)
 	w.n++
+}
+
+func (w *SW) Remove(item interface{}) {
+	for i, item := range w.items {
+		if item.Item == item {
+			w.remove(i)
+			return
+		}
+	}
+}
+
+func (w *SW) remove(i int) {
+	w.items = append(w.items[:i], w.items[i+1:]...)
 }
 
 // RemoveAll removes all weighted items.
