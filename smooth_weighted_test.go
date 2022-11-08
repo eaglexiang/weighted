@@ -59,10 +59,7 @@ func TestSW_SetWeight(t *testing.T) {
 	w.Add("server3", 3)
 	w.Add("server4", 4)
 
-	w.SetWeight([]struct {
-		ID     string
-		Weight int
-	}{
+	w.SetWeight([]WeightItem{
 		{
 			ID:     "server1",
 			Weight: 1,

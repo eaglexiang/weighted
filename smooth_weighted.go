@@ -70,11 +70,13 @@ func (w *SW) UnmarshalJSON(buf []byte) (err error) {
 	return
 }
 
-// SetWeight set weight of specific id
-func (w *SW) SetWeight(items []struct {
+type WeightItem struct {
 	ID     string
 	Weight int
-}) {
+}
+
+// SetWeight set weight of specific id
+func (w *SW) SetWeight(items []WeightItem) {
 	oldItems := hashset.New()
 
 loop:
