@@ -1,6 +1,7 @@
 package weighted
 
 import (
+	"github.com/emirpasic/gods/sets/hashset"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
 )
@@ -70,18 +71,40 @@ func (w *SW) UnmarshalJSON(buf []byte) (err error) {
 }
 
 // SetWeight set weight of specific id
-func (w *SW) SetWeight(id string, weight int) {
-	for i, item := range w.items {
-		if item.Item == id {
-			if item.Weight < 1 {
-				w.remove(i)
-			} else {
-				item.Weight = weight
+func (w *SW) SetWeight(items []struct {
+	ID     string
+	Weight int
+}) {
+	oldItems := hashset.New()
+
+loop:
+	for _, setItem := range items {
+		// set old item
+		for _, item := range w.items {
+			if item.Item == setItem.ID {
+				if setItem.Weight >= 1 {
+					item.Weight = setItem.Weight
+					// mark old item
+					oldItems.Add(setItem.ID)
+				}
+				continue loop
 			}
-			return
+		}
+
+		// add new item
+		w.Add(setItem.ID, setItem.Weight)
+	}
+
+	// delete dead item
+	rmItems := []interface{}{}
+	for _, item := range w.items {
+		if !oldItems.Contains(item.Item) {
+			rmItems = append(rmItems, item.Item)
 		}
 	}
-	w.Add(id, weight)
+	for _, rmItem := range rmItems {
+		w.Remove(rmItem)
+	}
 }
 
 // Add a weighted server.
@@ -91,9 +114,9 @@ func (w *SW) Add(item interface{}, weight int) {
 	w.n++
 }
 
-func (w *SW) Remove(item interface{}) {
+func (w *SW) Remove(rmItem interface{}) {
 	for i, item := range w.items {
-		if item.Item == item {
+		if item.Item == rmItem {
 			w.remove(i)
 			return
 		}
@@ -102,6 +125,7 @@ func (w *SW) Remove(item interface{}) {
 
 func (w *SW) remove(i int) {
 	w.items = append(w.items[:i], w.items[i+1:]...)
+	w.n--
 }
 
 // RemoveAll removes all weighted items.

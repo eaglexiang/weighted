@@ -1,6 +1,10 @@
 package weighted
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestSW_Next(t *testing.T) {
 	w := &SW{}
@@ -45,5 +49,39 @@ func TestSW_Next(t *testing.T) {
 
 	if results["server1"] != 7000 || results["server2"] != 9000 || results["server3"] != 13000 {
 		t.Error("the algorithm is wrong")
+	}
+}
+
+func TestSW_SetWeight(t *testing.T) {
+	w := &SW{}
+	w.Add("server1", 5)
+	w.Add("server2", 2)
+	w.Add("server3", 3)
+	w.Add("server4", 4)
+
+	w.SetWeight([]struct {
+		ID     string
+		Weight int
+	}{
+		{
+			ID:     "server1",
+			Weight: 1,
+		},
+		{
+			ID:     "server2",
+			Weight: 0,
+		},
+		{
+			ID:     "server4",
+			Weight: 2,
+		},
+	})
+
+	expected := &SW{}
+	expected.Add("server1", 1)
+	expected.Add("server4", 2)
+
+	if !assert.ObjectsAreEqual(expected, w) {
+		return
 	}
 }
