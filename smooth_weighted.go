@@ -77,7 +77,7 @@ type WeightItem struct {
 
 // SetWeight set weight of specific id
 func (w *SW) SetWeight(items []WeightItem) {
-	oldItems := hashset.New()
+	keptItems := hashset.New()
 
 loop:
 	for _, setItem := range items {
@@ -86,8 +86,9 @@ loop:
 			if item.Item == setItem.ID {
 				if setItem.Weight >= 1 {
 					item.Weight = setItem.Weight
+					item.EffectiveWeight = setItem.Weight
 					// mark old item
-					oldItems.Add(setItem.ID)
+					keptItems.Add(setItem.ID)
 				}
 				continue loop
 			}
@@ -95,12 +96,13 @@ loop:
 
 		// add new item
 		w.Add(setItem.ID, setItem.Weight)
+		keptItems.Add(setItem.ID)
 	}
 
 	// delete dead item
 	rmItems := []interface{}{}
 	for _, item := range w.items {
-		if !oldItems.Contains(item.Item) {
+		if !keptItems.Contains(item.Item) {
 			rmItems = append(rmItems, item.Item)
 		}
 	}

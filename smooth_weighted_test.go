@@ -72,13 +72,27 @@ func TestSW_SetWeight(t *testing.T) {
 			ID:     "server4",
 			Weight: 2,
 		},
+		{
+			ID:     "server5",
+			Weight: 5,
+		},
 	})
 
 	expected := &SW{}
 	expected.Add("server1", 1)
 	expected.Add("server4", 2)
+	expected.Add("server5", 5)
 
-	if !assert.ObjectsAreEqual(expected, w) {
+	expectedBuf, err := expected.MarshalJSON()
+	if !assert.NoError(t, err) {
+		return
+	}
+	wBuf, err := w.MarshalJSON()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	if !assert.Equal(t, string(expectedBuf), string(wBuf)) {
 		return
 	}
 }
